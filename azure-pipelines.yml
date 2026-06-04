@@ -1,0 +1,42 @@
+# Node.js
+# Build a general Node.js project with npm.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+trigger:
+  branches:
+    include:
+      - main
+      - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+    displayName: 'Setup Node.js'
+
+  - script: npm install
+    displayName: 'Install Dependencies'
+
+  - script: npx playwright install --with-deps
+    displayName: 'Install Playwright Browsers'
+
+  - script: npx playwright test --reporter=html
+    displayName: 'Run Playwright Tests'
+
+  - script: |
+      echo "Checking report folder"
+      ls -la
+      ls -la playwright-report || true
+    displayName: 'Verify Playwright Report'
+    condition: always()
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: 'playwright-report'
+      artifact: 'playwright-report'
+      publishLocation: 'pipeline'
+    displayName: 'Publish Playwright Report'
+    condition: always()
